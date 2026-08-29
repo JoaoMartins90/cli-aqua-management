@@ -3,6 +3,10 @@ package caixadaagua
 import enums.Cor
 import enums.Formato
 import enums.Material
+import utils.lerBigDecimal
+import utils.lerDouble
+import utils.lerEnum
+import utils.lerTexto
 import java.sql.Connection
 
 fun menu(conn: Connection) {
@@ -35,46 +39,22 @@ fun menu(conn: Connection) {
 fun cadastrarNovaCaixa(dao: CaixaDaAguaDAO) {
     println("=== CADASTRAR CAIXA D'ÁGUA ===")
 
-    println("Marca:")
-    val marca = readln()
-
-    println("Modelo:")
-    val modelo = readln()
-
-    println("Altura (m):")
-    val altura = readln().toDouble()
-
-    println("Largura (m):")
-    val largura = readln().toDouble()
-
-    println("Profundidade (m):")
-    val profundidade = readln().toDouble()
-
-    println("Cor (${Cor.entries.joinToString()}):")
-    val cor = Cor.valueOf(readln().uppercase())
-
-    println("Material (${Material.entries.joinToString()}):")
-    val material = Material.valueOf(readln().uppercase())
-
-    println("Formato (${Formato.entries.joinToString()}):")
-    val formato = Formato.valueOf(readln().uppercase())
-
-    println("Preço:")
-    val preco = readln().toBigDecimal()
-
     val caixa = CaixaDaAgua(
-        id = 0,
-        marca = marca,
-        modelo = modelo,
-        altura = altura,
-        largura = largura,
-        profundidade = profundidade,
-        cor = cor,
-        material = material,
-        formato = formato,
-        preco = preco
+        marca = lerTexto("Marca:"),
+        modelo = lerTexto("Modelo:"),
+        altura = lerDouble("Altura (m):", min = 0.01),
+        largura = lerDouble("Largura (m):", min = 0.01),
+        profundidade = lerDouble("Profundidade (m):", min = 0.01),
+        cor = lerEnum("Cor:", Cor.entries),
+        material = lerEnum("Material:", Material.entries),
+        formato = lerEnum("Formato:", Formato.entries),
+        preco = lerBigDecimal("Preco:")
     )
 
     val novoId = dao.insert(caixa)
-    println("Caixa d'água cadastrada com sucesso! ID: $novoId")
+    if (novoId != null)
+        println("Caixa d'água cadastrada com sucesso! ID: $novoId")
+    else
+        println("Nao foi possivel cadastrar a caixa")
+
 }

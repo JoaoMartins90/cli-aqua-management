@@ -15,13 +15,14 @@ fun menuPrincipal(conn: Connection) {
     do {
         println("0 - SAIR")
         println("1 - GERENCIAR CAIXA DE AGUA")
+        println("2 - GERENCIAR FUNCIONARIOS")
 
         val op = readln()
 
         when (op) {
             "0" -> println("Sistema encerrado")
             "1" -> menu(conn)
-            "2" -> println("teste")
+            "2" -> println("Gerenciar Funcionarios")
             else -> println("Opção inválida")
         }
     } while (op != "0")

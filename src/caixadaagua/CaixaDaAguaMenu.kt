@@ -29,15 +29,15 @@ fun menu(conn: Connection) {
             "1" -> cadastrarNovaCaixa(dao)
             "2" -> print(2)
             "3" -> print(3)
-            "4" -> print(4)
+            "4" -> listarCaixa(dao)
             else -> println("Opção inválida!")
 
         }
     } while(op != "0")
 }
 
-fun cadastrarNovaCaixa(dao: CaixaDaAguaDAO) {
-    println("=== CADASTRAR CAIXA D'ÁGUA ===")
+private fun cadastrarNovaCaixa(dao: CaixaDaAguaDAO) {
+    println("=== CADASTRAR CAIXA DE AGUA ===")
 
     val caixa = CaixaDaAgua(
         marca = lerTexto("Marca:"),
@@ -57,4 +57,28 @@ fun cadastrarNovaCaixa(dao: CaixaDaAguaDAO) {
     else
         println("Nao foi possivel cadastrar a caixa")
 
+}
+
+private fun listarCaixa(dao: CaixaDaAguaDAO) {
+    println("=== LISTA DE CAIXAS DE AGUA ===")
+
+    val caixas: List<CaixaDaAgua> = dao.listar()
+
+    caixas.forEach { c ->
+        println("====================================")
+        println("""
+            Id: ${c.id}
+            Marca: ${c.marca}
+            Modelo: ${c.modelo}
+            Altura: ${c.altura}
+            Largura: ${c.largura}
+            Profundidade: ${c.profundidade}
+            Cor: ${c.cor.name}
+            Material: ${c.material.name}
+            Formato: ${c.formato.name}}
+            Preco: ${c.preco}
+        """.trimIndent()
+        )
+        println("====================================")
+    }
 }

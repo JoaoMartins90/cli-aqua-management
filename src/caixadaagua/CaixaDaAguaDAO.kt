@@ -1,5 +1,8 @@
 package caixadaagua
 
+import enums.Cor
+import enums.Formato
+import enums.Material
 import java.sql.Connection
 import java.sql.SQLException
 
@@ -37,5 +40,41 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         }
 
         return null
+    }
+
+    fun listar(): List<CaixaDaAgua> {
+        val caixas = mutableListOf<CaixaDaAgua>()
+
+        val sql = """
+            SELECT id, marca, modelo, altura, largura, profundidade,
+            cor, material, formato, preco
+            FROM caixa_da_agua
+            ORDER BY id
+        """.trimIndent()
+
+        try {
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.executeQuery().use { rs ->
+                    while (rs.next()) {
+                        caixas += CaixaDaAgua(
+                            id = rs.getInt("id"),
+                            marca = rs.getString("marca"),
+                            modelo = rs.getString("modelo"),
+                            altura = rs.getDouble("altura"),
+                            largura = rs.getDouble("largura"),
+                            profundidade = rs.getDouble("profundidade"),
+                            cor = Cor.valueOf(rs.getString("cor")),
+                            material = Material.valueOf(rs.getString("material")),
+                            formato = Formato.valueOf(rs.getString("formato")),
+                            preco = rs.getBigDecimal("preco")
+
+                        )
+                    }
+                }
+            }
+        } catch (ex: SQLException) {
+            println("Erro ao listar: ${ex.message}")
+        }
+        return caixas
     }
 }

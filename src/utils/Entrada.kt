@@ -19,7 +19,7 @@ private fun <T> lerAte(rotulo: String, erro: String, converter: (String) -> T?):
 }
 
 private fun normalizar(texto: String) =
-    if (',' in texto) texto.replace(",", "")
+    if (',' in texto) texto.replace(",", ".")
         .replace(',', '.') else texto
 
 fun lerTexto(rotulo: String, obrigatorio: Boolean = true): String =

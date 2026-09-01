@@ -15,7 +15,7 @@ fun menu(conn: Connection) {
     val dao = CaixaDaAguaDAO(conn)
 
     do {
-        println("0 - SAIR")
+        println("0 - VOLTAR AO MENU PRINCIPAL")
         println("1 - CADASTRAR CAIXA DE AGUA")
         println("2 - REMOVER CAIXA DE AGUA")
         println("3 - ALTERAR CAIXA DE AGUA")
@@ -25,11 +25,11 @@ fun menu(conn: Connection) {
 
         when(op){
             "0" -> {
-                println("Sistema encerrado")
+                println("")
             }
-            "1" -> cadastrarNovaCaixa(dao)
+            "1" -> cadastrarCaixa(dao)
             "2" -> removerCaixa(dao)
-            "3" -> print(3)
+            "3" -> alterarCaixa(dao)
             "4" -> listarCaixas(dao)
             else -> println("Opção inválida!")
 
@@ -37,7 +37,7 @@ fun menu(conn: Connection) {
     } while(op != "0")
 }
 
-private fun cadastrarNovaCaixa(dao: CaixaDaAguaDAO) {
+private fun cadastrarCaixa(dao: CaixaDaAguaDAO) {
     println("=== CADASTRAR CAIXA DE AGUA ===")
 
     val caixa = CaixaDaAgua(
@@ -58,6 +58,42 @@ private fun cadastrarNovaCaixa(dao: CaixaDaAguaDAO) {
     else
         println("Nao foi possivel cadastrar a caixa")
 
+}
+
+private fun alterarCaixa(dao: CaixaDaAguaDAO) {
+    println("=== ALTERAR CAIXA DE AGUA ===")
+
+
+    println("Digite o Id da caixa que deseja alterar:")
+    println("Ids: ${dao.listarIdsCaixas()}")
+    val id = readln().toIntOrNull()
+    if (id == null) {
+        println("Id invalido")
+        return
+    }
+
+    val caixa = dao.buscarPorId(id)
+    if (caixa == null) {
+        println("Caixa não encontrada")
+        return
+    }
+
+    val alterada = caixa.copy(
+        marca = lerTexto("Marca:"),
+        modelo = lerTexto("Modelo:"),
+        altura = lerDouble("Altura (m):", min = 0.01),
+        largura = lerDouble("Largura (m):", min = 0.01),
+        profundidade = lerDouble("Profundidade (m):", min = 0.01),
+        cor = lerEnum("Cor:", Cor.entries),
+        material = lerEnum("Material:", Material.entries),
+        formato = lerEnum("Formato:", Formato.entries),
+        preco = lerBigDecimal("Preco:")
+    )
+
+    if (dao.alterar(alterada))
+        println("Caixa ${alterada.id} alterada com sucesso!")
+    else
+        println("Nao foi possivel atualizar a caixa")
 }
 
 private fun listarCaixas(dao: CaixaDaAguaDAO) {

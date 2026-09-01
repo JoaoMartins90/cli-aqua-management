@@ -94,6 +94,70 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         }
     }
 
+    fun alterar(caixa: CaixaDaAgua): Boolean {
+        val id = caixa.id ?: return false
+
+        val sql = """
+            UPDATE caixa_da_agua SET
+            marca = ?, modelo = ?, altura = ?, largura = ?, profundidade = ?,
+            cor = ?, material = ?, formato = ?, preco = ?
+            WHERE id = ?
+        """.trimIndent()
+
+        try {
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setString(1, caixa.marca)
+                stmt.setString(2, caixa.modelo)
+                stmt.setDouble(3, caixa.altura)
+                stmt.setDouble(4, caixa.largura)
+                stmt.setDouble(5, caixa.profundidade)
+                stmt.setString(6, caixa.cor.name)
+                stmt.setString(7, caixa.material.name)
+                stmt.setString(8, caixa.formato.name)
+                stmt.setBigDecimal(9, caixa.preco)
+                stmt.setInt(10, caixa.id)
+
+                return stmt.executeUpdate() > 0
+            }
+        } catch (ex: SQLException) {
+            println("Erro ao atualizar: ${ex.message}")
+        }
+        return false
+    }
+
+    fun buscarPorId(id: Int): CaixaDaAgua? {
+        val sql = """
+            SELECT id, marca, modelo, altura, largura, profundidade,
+            cor, material, formato, preco
+            FROM caixa_da_agua
+            WHERE id = ?;
+        """.trimIndent()
+
+        try {
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setInt(1, id)
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) return CaixaDaAgua(
+                        id = rs.getInt("id"),
+                        marca = rs.getString("marca"),
+                        modelo = rs.getString("modelo"),
+                        altura = rs.getDouble("altura"),
+                        largura = rs.getDouble("largura"),
+                        profundidade = rs.getDouble("profundidade"),
+                        cor = Cor.valueOf(rs.getString("cor")),
+                        material = Material.valueOf(rs.getString("material")),
+                        formato = Formato.valueOf(rs.getString("formato")),
+                        preco = rs.getBigDecimal("preco")
+                    )
+                }
+            }
+        } catch (ex: SQLException) {
+            println("Erro ao buscar: ${ex.message}")
+        }
+        return null
+    }
+
+
     fun listarIdsCaixas(): List<Int> {
         val ids = mutableListOf<Int>()
 

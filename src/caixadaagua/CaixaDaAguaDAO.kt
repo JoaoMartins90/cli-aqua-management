@@ -77,4 +77,44 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         }
         return caixas
     }
+
+    fun remover(id: Int) {
+        val sql = """
+            DELETE FROM caixa_da_agua
+            WHERE id = ?;
+        """.trimIndent()
+
+        try {
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.setInt(1, id)
+                stmt.executeUpdate()
+            }
+        } catch (ex: SQLException) {
+            println("Erro ao remover: ${ex.message}")
+        }
+    }
+
+    fun listarIdsCaixas(): List<Int> {
+        val ids = mutableListOf<Int>()
+
+        val sql = """
+            SELECT id
+            FROM caixa_da_agua
+            ORDER BY id
+        """.trimIndent()
+
+        try {
+            conn.prepareStatement(sql).use { stmt ->
+                stmt.executeQuery().use { rs ->
+                    while (rs.next()) {
+                        ids.add(rs.getInt("id"))
+                    }
+                }
+            }
+        } catch (ex: SQLException) {
+            println("Erro ao listar os Ids: ${ex.message}")
+        }
+
+        return ids
+    }
 }

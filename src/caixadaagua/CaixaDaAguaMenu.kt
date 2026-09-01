@@ -6,6 +6,7 @@ import enums.Material
 import utils.lerBigDecimal
 import utils.lerDouble
 import utils.lerEnum
+import utils.lerInt
 import utils.lerTexto
 import java.sql.Connection
 
@@ -27,9 +28,9 @@ fun menu(conn: Connection) {
                 println("Sistema encerrado")
             }
             "1" -> cadastrarNovaCaixa(dao)
-            "2" -> print(2)
+            "2" -> removerCaixa(dao)
             "3" -> print(3)
-            "4" -> listarCaixa(dao)
+            "4" -> listarCaixas(dao)
             else -> println("Opção inválida!")
 
         }
@@ -59,7 +60,7 @@ private fun cadastrarNovaCaixa(dao: CaixaDaAguaDAO) {
 
 }
 
-private fun listarCaixa(dao: CaixaDaAguaDAO) {
+private fun listarCaixas(dao: CaixaDaAguaDAO) {
     println("=== LISTA DE CAIXAS DE AGUA ===")
 
     val caixas: List<CaixaDaAgua> = dao.listar()
@@ -80,5 +81,27 @@ private fun listarCaixa(dao: CaixaDaAguaDAO) {
         """.trimIndent()
         )
         println("====================================")
+    }
+}
+
+private fun removerCaixa(dao: CaixaDaAguaDAO) {
+    println("=== REMOVER CAIXA DE AGUA ===")
+
+    val ids: List<Int> = dao.listarIdsCaixas()
+    println("Lista de Ids: $ids")
+
+    println("Escolha o Id da caixa que deseja remover:")
+
+    val idRemovido = readln().toInt()
+
+    while (true) {
+        if (idRemovido in ids) {
+            dao.remover(idRemovido)
+            println("Caixa $idRemovido removido com sucesso!")
+            return
+        } else {
+        println("Digite um Id existente")
+        break
+        }
     }
 }

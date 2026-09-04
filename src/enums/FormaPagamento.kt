@@ -1,6 +1,6 @@
 package enums
 
-enum class FormaPagamento(val descricao: String) {
+enum class FormaPagamento(private val descricao: String) {
 
     DINHEIRO("Dinheiro"),
     PIX("Pix"),

@@ -1,17 +1,23 @@
+import caixadaagua.CaixaDaAguaDAO
+import caixadaagua.CaixaDaAguaService
 import caixadaagua.menu
 import db.ConnectionFactory.getConnection
 import java.sql.Connection
 
+class App(conn: Connection) {
+    val caixa = CaixaDaAguaService(CaixaDaAguaDAO(conn))
+}
+
 fun main() {
 
     getConnection().use { conn ->
-        menuPrincipal(conn)
+        menuPrincipal(App(conn))
 
     }
 
 }
 
-fun menuPrincipal(conn: Connection) {
+fun menuPrincipal(app: App) {
     do {
         println("0 - SAIR")
         println("1 - GERENCIAR CAIXA DE AGUA")
@@ -21,10 +27,9 @@ fun menuPrincipal(conn: Connection) {
 
         when (op) {
             "0" -> println("Sistema encerrado")
-            "1" -> menu(conn)
+            "1" -> menu(app.caixa)
             "2" -> println("Gerenciar Funcionarios")
             else -> println("Opção inválida")
         }
     } while (op != "0")
-
 }

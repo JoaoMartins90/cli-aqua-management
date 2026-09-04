@@ -1,6 +1,6 @@
 package enums
 
-enum class Material(val descricao: String) {
+enum class Material(private val descricao: String) {
 
     POLIETILENO("Polietileno"),
     FIBRA_DE_VIDRO("Fibra de Vidro"),

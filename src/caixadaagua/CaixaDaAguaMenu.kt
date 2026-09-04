@@ -8,11 +8,9 @@ import utils.lerDouble
 import utils.lerEnum
 import utils.lerInt
 import utils.lerTexto
-import java.sql.Connection
+import java.sql.SQLException
 
-fun menu(conn: Connection) {
-
-    val dao = CaixaDaAguaDAO(conn)
+fun menu(service: CaixaDaAguaService) {
 
     do {
         println("0 - VOLTAR AO MENU PRINCIPAL")
@@ -23,121 +21,128 @@ fun menu(conn: Connection) {
 
         val op = readln()
 
-        when(op){
-            "0" -> {
-                println("")
+        try {
+            when (op) {
+                "0" -> {}
+                "1" -> cadastrar(service)
+                "2" -> remover(service)
+                "3" -> alterar(service)
+                "4" -> listar(service)
+                else -> println("Opção inválida!")
             }
-            "1" -> cadastrarCaixa(dao)
-            "2" -> removerCaixa(dao)
-            "3" -> alterarCaixa(dao)
-            "4" -> listarCaixas(dao)
-            else -> println("Opção inválida!")
-
+        } catch (ex: IllegalArgumentException) {
+            println(" >> ${ex.message}")
+        } catch (ex: IllegalStateException) {
+            println(" >> ${ex.message}")
+        } catch (ex: SQLException) {
+            println(" >> Erro de banco: ${ex.message}")
         }
-    } while(op != "0")
+    } while (op != "0")
 }
 
-private fun cadastrarCaixa(dao: CaixaDaAguaDAO) {
+private fun cadastrar(service: CaixaDaAguaService) {
     println("=== CADASTRAR CAIXA DE AGUA ===")
 
     val caixa = CaixaDaAgua(
         marca = lerTexto("Marca:"),
         modelo = lerTexto("Modelo:"),
+        capacidadeLitros = lerInt("Capacidade (l):"),
         altura = lerDouble("Altura (m):", min = 0.01),
         largura = lerDouble("Largura (m):", min = 0.01),
         profundidade = lerDouble("Profundidade (m):", min = 0.01),
         cor = lerEnum("Cor:", Cor.entries),
         material = lerEnum("Material:", Material.entries),
         formato = lerEnum("Formato:", Formato.entries),
-        preco = lerBigDecimal("Preco:")
+        preco = lerBigDecimal("Preco:"),
+        estoqueAtual = lerInt("Estoque:")
     )
-
-    val novoId = dao.insert(caixa)
-    if (novoId != null)
-        println("Caixa d'água cadastrada com sucesso! ID: $novoId")
-    else
-        println("Nao foi possivel cadastrar a caixa")
+    println("Caixa cadastrada com sucesso ID: ${service.cadastrar(caixa)}")
 
 }
 
-private fun alterarCaixa(dao: CaixaDaAguaDAO) {
+private fun alterar(service: CaixaDaAguaService) {
     println("=== ALTERAR CAIXA DE AGUA ===")
 
+    val id = escolherId(service, "alterar") ?: return
 
-    println("Digite o Id da caixa que deseja alterar:")
-    println("Ids: ${dao.listarIdsCaixas()}")
-    val id = readln().toIntOrNull()
-    if (id == null) {
-        println("Id invalido")
-        return
-    }
-
-    val caixa = dao.buscarPorId(id)
+    val caixa = service.buscarPorId(id)
     if (caixa == null) {
-        println("Caixa não encontrada")
+        println("Caixa nao encontrada")
         return
     }
 
     val alterada = caixa.copy(
         marca = lerTexto("Marca:"),
         modelo = lerTexto("Modelo:"),
+        capacidadeLitros = lerInt("Capacidade (l):", min = 1),
         altura = lerDouble("Altura (m):", min = 0.01),
         largura = lerDouble("Largura (m):", min = 0.01),
         profundidade = lerDouble("Profundidade (m):", min = 0.01),
         cor = lerEnum("Cor:", Cor.entries),
         material = lerEnum("Material:", Material.entries),
         formato = lerEnum("Formato:", Formato.entries),
-        preco = lerBigDecimal("Preco:")
+        preco = lerBigDecimal("Preco:"),
+        estoqueAtual = lerInt("Estoque:", min = 0)
     )
 
-    if (dao.alterar(alterada))
-        println("Caixa ${alterada.id} alterada com sucesso!")
-    else
-        println("Nao foi possivel atualizar a caixa")
+    if (service.alterar(alterada)) println("Caixa $id alterada com sucesso")
+    else println("Nao foi possivel alterar a caixa $id")
 }
 
-private fun listarCaixas(dao: CaixaDaAguaDAO) {
+private fun remover(service: CaixaDaAguaService) {
+    println("=== REMOVER CAIXA DE AGUA ===")
+
+    val id = escolherId(service, "remover") ?: return
+
+    if (service.remover(id)) println("Caixa $id removida com sucesso")
+    else println("Nao foi possivel remover a caixa $id")
+}
+
+private fun listar(service: CaixaDaAguaService) {
     println("=== LISTA DE CAIXAS DE AGUA ===")
 
-    val caixas: List<CaixaDaAgua> = dao.listar()
+    val caixas = service.listar()
+    if (caixas.isEmpty()) {
+        println("Nenhuma caixa cadastrada")
+        return
+    }
 
     caixas.forEach { c ->
         println("====================================")
-        println("""
+        println(
+            """
             Id: ${c.id}
             Marca: ${c.marca}
             Modelo: ${c.modelo}
-            Altura: ${c.altura}
-            Largura: ${c.largura}
-            Profundidade: ${c.profundidade}
-            Cor: ${c.cor.name}
-            Material: ${c.material.name}
-            Formato: ${c.formato.name}}
+            Capacidade (l): ${c.capacidadeLitros}
+            Altura (m): ${c.altura}
+            Largura (m): ${c.largura}
+            Profundidade (m): ${c.profundidade}
+            Cor: ${c.cor}
+            Material: ${c.material}
+            Formato: ${c.formato}
             Preco: ${c.preco}
-        """.trimIndent()
+            Estoque: ${c.estoqueAtual}
+            Criado em: ${c.criadoEm}
+            """.trimIndent()
         )
-        println("====================================")
     }
+    println("====================================")
 }
 
-private fun removerCaixa(dao: CaixaDaAguaDAO) {
-    println("=== REMOVER CAIXA DE AGUA ===")
-
-    val ids: List<Int> = dao.listarIdsCaixas()
-    println("Lista de Ids: $ids")
-
-    println("Escolha o Id da caixa que deseja remover:")
-
-    val idRemovido = readln().toInt()
-
-    while (true) {
-        if (idRemovido in ids) {
-            dao.remover(idRemovido)
-            println("Caixa $idRemovido removido com sucesso!")
-            return
-        } else {
-        println("Digite um Id existente")
-        break
-        }
+private fun escolherId(service: CaixaDaAguaService, acao: String): Int? {
+    val ids = service.idsExistentes()
+    if (ids.isEmpty()) {
+        println("Nenhuma caixa cadastrada")
+        return null
     }
+
+    println("Ids disponiveis: $ids")
+    val id = lerInt("Id da caixa que deseja: $acao")
+
+    if (id !in ids) {
+        println("Id inexistente")
+        return null
+    }
+    return id
 }

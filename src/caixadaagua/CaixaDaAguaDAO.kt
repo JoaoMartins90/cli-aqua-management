@@ -13,7 +13,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
 
         val sql = """
             INSERT INTO caixa_da_agua(
-            marca, modelo, capacidade_litros, altura, largura, profundidade,
+            marca, modelo, capacidade, altura, largura, profundidade,
             cor, material, formato, preco, estoque_atual, criado_em)
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id
@@ -22,7 +22,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         conn.prepareStatement(sql).use { stmt ->
             stmt.setString(1, caixaDaAgua.marca)
             stmt.setString(2, caixaDaAgua.modelo)
-            stmt.setInt(3, caixaDaAgua.capacidadeLitros)
+            stmt.setInt(3, caixaDaAgua.capacidade)
             stmt.setDouble(4, caixaDaAgua.altura)
             stmt.setDouble(5, caixaDaAgua.largura)
             stmt.setDouble(6, caixaDaAgua.profundidade)
@@ -44,7 +44,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         val caixas = mutableListOf<CaixaDaAgua>()
 
         val sql = """
-            SELECT id, marca, modelo, capacidade_litros, altura, largura, profundidade,
+            SELECT id, marca, modelo, capacidade, altura, largura, profundidade,
             cor, material, formato, preco, estoque_atual, criado_em
             FROM caixa_da_agua
             ORDER BY id
@@ -53,11 +53,11 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         conn.prepareStatement(sql).use { stmt ->
             stmt.executeQuery().use { rs ->
                 while (rs.next()) {
-                    caixas += CaixaDaAgua(
+                    caixas.add(CaixaDaAgua(
                         id = rs.getInt("id"),
                         marca = rs.getString("marca"),
                         modelo = rs.getString("modelo"),
-                        capacidadeLitros = rs.getInt("capacidade_litros"),
+                        capacidade= rs.getInt("capacidade"),
                         altura = rs.getDouble("altura"),
                         largura = rs.getDouble("largura"),
                         profundidade = rs.getDouble("profundidade"),
@@ -67,7 +67,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
                         preco = rs.getBigDecimal("preco"),
                         estoqueAtual = rs.getInt("estoque_atual"),
                         criadoEm = rs.getTimestamp("criado_em").toLocalDateTime()
-                    )
+                    ))
                 }
             }
         }
@@ -91,7 +91,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
 
         val sql = """
             UPDATE caixa_da_agua SET
-            marca = ?, modelo = ?, capacidade_litros = ?, altura = ?, largura = ?, profundidade = ?,
+            marca = ?, modelo = ?, capacidade = ?, altura = ?, largura = ?, profundidade = ?,
             cor = ?, material = ?, formato = ?, preco = ?, estoque_atual = ?
             WHERE id = ?
         """.trimIndent()
@@ -99,7 +99,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         conn.prepareStatement(sql).use { stmt ->
             stmt.setString(1, caixa.marca)
             stmt.setString(2, caixa.modelo)
-            stmt.setInt(3, caixa.capacidadeLitros)
+            stmt.setInt(3, caixa.capacidade)
             stmt.setDouble(4, caixa.altura)
             stmt.setDouble(5, caixa.largura)
             stmt.setDouble(6, caixa.profundidade)
@@ -116,7 +116,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
 
     fun buscarPorId(id: Int): CaixaDaAgua? {
         val sql = """
-            SELECT id, marca, modelo, capacidade_litros, altura, largura, profundidade,
+            SELECT id, marca, modelo, capacidade, altura, largura, profundidade,
             cor, material, formato, preco, estoque_atual, criado_em
             FROM caixa_da_agua
             WHERE id = ?
@@ -129,7 +129,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
                     id = rs.getInt("id"),
                     marca = rs.getString("marca"),
                     modelo = rs.getString("modelo"),
-                    capacidadeLitros = rs.getInt("capacidade_litros"),
+                    capacidade = rs.getInt("capacidade_litros"),
                     altura = rs.getDouble("altura"),
                     largura = rs.getDouble("largura"),
                     profundidade = rs.getDouble("profundidade"),

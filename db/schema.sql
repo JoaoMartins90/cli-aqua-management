@@ -120,7 +120,7 @@ CREATE TABLE caixa_da_agua (
     marca             VARCHAR(60)   NOT NULL,
     modelo            VARCHAR(60)   NOT NULL,
     -- capacidade e o atributo pelo qual esse produto e vendido; faltava.
-    capacidade_litros INTEGER       NOT NULL,
+    capacidade        INTEGER       NOT NULL,
     altura            NUMERIC(6,2)  NOT NULL,
     largura           NUMERIC(6,2)  NOT NULL,
     profundidade      NUMERIC(6,2)  NOT NULL,
@@ -132,9 +132,9 @@ CREATE TABLE caixa_da_agua (
     estoque_atual     INTEGER       NOT NULL DEFAULT 0,
     criado_em         TIMESTAMP     NOT NULL DEFAULT now(),
 
-    CONSTRAINT caixa_da_agua_modelo_uk UNIQUE (marca, modelo, capacidade_litros),
+    CONSTRAINT caixa_da_agua_modelo_uk UNIQUE (marca, modelo, capacidade),
 
-    CONSTRAINT caixa_da_agua_capacidade_ck CHECK (capacidade_litros > 0),
+    CONSTRAINT caixa_da_agua_capacidade_ck CHECK (capacidade > 0),
     CONSTRAINT caixa_da_agua_medidas_ck    CHECK (altura > 0 AND largura > 0 AND profundidade > 0),
     CONSTRAINT caixa_da_agua_preco_ck      CHECK (preco > 0),
     CONSTRAINT caixa_da_agua_estoque_ck    CHECK (estoque_atual >= 0)

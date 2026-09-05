@@ -31,7 +31,7 @@ class CaixaDaAguaService(
     private fun validar(c: CaixaDaAgua) {
         require(c.marca.isNotBlank()) { "Marca nao pode ser vazia" }
         require(c.modelo.isNotBlank()) { "Modelo nao pode ser vazio" }
-        require(c.capacidadeLitros > 0) { "Capacidade deve ser maior que zero" }
+        require(c.capacidade > 0) { "Capacidade deve ser maior que zero" }
         require(c.altura > 0 && c.largura > 0 && c.profundidade > 0) {
             "Altura, largura e profundidade devem ser maiores que zero"
         }

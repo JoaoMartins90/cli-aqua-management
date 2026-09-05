@@ -46,7 +46,7 @@ private fun cadastrar(service: CaixaDaAguaService) {
     val caixa = CaixaDaAgua(
         marca = lerTexto("Marca:"),
         modelo = lerTexto("Modelo:"),
-        capacidadeLitros = lerInt("Capacidade (l):"),
+        capacidade = lerInt("Capacidade (l):"),
         altura = lerDouble("Altura (m):", min = 0.01),
         largura = lerDouble("Largura (m):", min = 0.01),
         profundidade = lerDouble("Profundidade (m):", min = 0.01),
@@ -74,7 +74,7 @@ private fun alterar(service: CaixaDaAguaService) {
     val alterada = caixa.copy(
         marca = lerTexto("Marca:"),
         modelo = lerTexto("Modelo:"),
-        capacidadeLitros = lerInt("Capacidade (l):", min = 1),
+        capacidade = lerInt("Capacidade (l):", min = 1),
         altura = lerDouble("Altura (m):", min = 0.01),
         largura = lerDouble("Largura (m):", min = 0.01),
         profundidade = lerDouble("Profundidade (m):", min = 0.01),
@@ -114,7 +114,7 @@ private fun listar(service: CaixaDaAguaService) {
             Id: ${c.id}
             Marca: ${c.marca}
             Modelo: ${c.modelo}
-            Capacidade (l): ${c.capacidadeLitros}
+            Capacidade (l): ${c.capacidade}
             Altura (m): ${c.altura}
             Largura (m): ${c.largura}
             Profundidade (m): ${c.profundidade}

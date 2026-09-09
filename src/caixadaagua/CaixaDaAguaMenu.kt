@@ -46,7 +46,7 @@ private fun cadastrar(service: CaixaDaAguaService) {
     val caixa = CaixaDaAgua(
         marca = lerTexto("Marca:"),
         modelo = lerTexto("Modelo:"),
-        capacidade = lerInt("Capacidade (l):"),
+        capacidade = lerInt("Capacidade (l):", min = 1),
         altura = lerDouble("Altura (m):", min = 0.01),
         largura = lerDouble("Largura (m):", min = 0.01),
         profundidade = lerDouble("Profundidade (m):", min = 0.01),
@@ -54,7 +54,7 @@ private fun cadastrar(service: CaixaDaAguaService) {
         material = lerEnum("Material:", Material.entries),
         formato = lerEnum("Formato:", Formato.entries),
         preco = lerBigDecimal("Preco:"),
-        estoqueAtual = lerInt("Estoque:")
+        estoqueAtual = lerInt("Estoque:", min = 0)
     )
     println("Caixa cadastrada com sucesso ID: ${service.cadastrar(caixa)}")
 

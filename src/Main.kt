@@ -2,10 +2,13 @@ import caixadaagua.CaixaDaAguaDAO
 import caixadaagua.CaixaDaAguaService
 import caixadaagua.menu
 import db.ConnectionFactory.getConnection
+import pessoa.PessoaDAO
+import pessoa.PessoaService
 import java.sql.Connection
 
 class App(conn: Connection) {
     val caixa = CaixaDaAguaService(CaixaDaAguaDAO(conn))
+    val pessoa = PessoaService(conn, PessoaDAO(conn))
 }
 
 fun main() {

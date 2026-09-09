@@ -25,6 +25,9 @@ class CaixaDaAguaService(
     fun buscarPorId(id: Int): CaixaDaAgua? =
         dao.buscarPorId(id)
 
+    fun buscarPorModelo(marca: String, modelo: String, capacidade: Int): CaixaDaAgua? =
+        dao.buscarPorModelo(marca, modelo, capacidade)
+
     fun idsExistentes(): List<Int> =
         dao.listarIdsCaixas()
 

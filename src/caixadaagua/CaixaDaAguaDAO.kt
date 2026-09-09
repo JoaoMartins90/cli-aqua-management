@@ -4,8 +4,13 @@ import enums.Cor
 import enums.Formato
 import enums.Material
 import java.sql.Connection
+import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Timestamp
+
+private const val COLUNAS =
+    "id, marca, modelo, capacidade, altura, largura, profundidade, " +
+        "cor, material, formato, preco, estoque_atual, criado_em"
 
 class CaixaDaAguaDAO(private val conn: Connection) {
 
@@ -44,8 +49,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         val caixas = mutableListOf<CaixaDaAgua>()
 
         val sql = """
-            SELECT id, marca, modelo, capacidade, altura, largura, profundidade,
-            cor, material, formato, preco, estoque_atual, criado_em
+            SELECT $COLUNAS
             FROM caixa_da_agua
             ORDER BY id
         """.trimIndent()
@@ -53,21 +57,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         conn.prepareStatement(sql).use { stmt ->
             stmt.executeQuery().use { rs ->
                 while (rs.next()) {
-                    caixas.add(CaixaDaAgua(
-                        id = rs.getInt("id"),
-                        marca = rs.getString("marca"),
-                        modelo = rs.getString("modelo"),
-                        capacidade= rs.getInt("capacidade"),
-                        altura = rs.getDouble("altura"),
-                        largura = rs.getDouble("largura"),
-                        profundidade = rs.getDouble("profundidade"),
-                        cor = Cor.valueOf(rs.getString("cor")),
-                        material = Material.valueOf(rs.getString("material")),
-                        formato = Formato.valueOf(rs.getString("formato")),
-                        preco = rs.getBigDecimal("preco"),
-                        estoqueAtual = rs.getInt("estoque_atual"),
-                        criadoEm = rs.getTimestamp("criado_em").toLocalDateTime()
-                    ))
+                    caixas.add(mapear(rs))
                 }
             }
         }
@@ -116,8 +106,7 @@ class CaixaDaAguaDAO(private val conn: Connection) {
 
     fun buscarPorId(id: Int): CaixaDaAgua? {
         val sql = """
-            SELECT id, marca, modelo, capacidade, altura, largura, profundidade,
-            cor, material, formato, preco, estoque_atual, criado_em
+            SELECT $COLUNAS
             FROM caixa_da_agua
             WHERE id = ?
         """.trimIndent()
@@ -125,21 +114,25 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         conn.prepareStatement(sql).use { stmt ->
             stmt.setInt(1, id)
             stmt.executeQuery().use { rs ->
-                if (rs.next()) return CaixaDaAgua(
-                    id = rs.getInt("id"),
-                    marca = rs.getString("marca"),
-                    modelo = rs.getString("modelo"),
-                    capacidade = rs.getInt("capacidade_litros"),
-                    altura = rs.getDouble("altura"),
-                    largura = rs.getDouble("largura"),
-                    profundidade = rs.getDouble("profundidade"),
-                    cor = Cor.valueOf(rs.getString("cor")),
-                    material = Material.valueOf(rs.getString("material")),
-                    formato = Formato.valueOf(rs.getString("formato")),
-                    preco = rs.getBigDecimal("preco"),
-                    estoqueAtual = rs.getInt("estoque_atual"),
-                    criadoEm = rs.getTimestamp("criado_em").toLocalDateTime()
-                )
+                if (rs.next()) return mapear(rs)
+            }
+        }
+        return null
+    }
+
+    fun buscarPorModelo(marca: String, modelo: String, capacidade: Int): CaixaDaAgua? {
+        val sql = """
+            SELECT $COLUNAS
+            FROM caixa_da_agua
+            WHERE marca = ? AND modelo = ? AND capacidade = ?
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setString(1, marca)
+            stmt.setString(2, modelo)
+            stmt.setInt(3, capacidade)
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) return mapear(rs)
             }
         }
         return null
@@ -163,4 +156,20 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         }
         return ids
     }
+
+    private fun mapear(rs: ResultSet) = CaixaDaAgua(
+        id = rs.getInt("id"),
+        marca = rs.getString("marca"),
+        modelo = rs.getString("modelo"),
+        capacidade = rs.getInt("capacidade"),
+        altura = rs.getDouble("altura"),
+        largura = rs.getDouble("largura"),
+        profundidade = rs.getDouble("profundidade"),
+        cor = Cor.valueOf(rs.getString("cor")),
+        material = Material.valueOf(rs.getString("material")),
+        formato = Formato.valueOf(rs.getString("formato")),
+        preco = rs.getBigDecimal("preco"),
+        estoqueAtual = rs.getInt("estoque_atual"),
+        criadoEm = rs.getTimestamp("criado_em").toLocalDateTime()
+    )
 }

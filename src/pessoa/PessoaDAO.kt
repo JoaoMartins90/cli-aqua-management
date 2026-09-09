@@ -1,8 +1,11 @@
 package pessoa
 
 import java.sql.Connection
+import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Timestamp
+
+private const val COLUNAS = "id, nome, cpf_cnpj, telefone, criado_em"
 
 class PessoaDAO(private val conn: Connection) {
 
@@ -32,7 +35,7 @@ class PessoaDAO(private val conn: Connection) {
         val pessoas = mutableListOf<Pessoa>()
 
         val sql = """
-            SELECT id, nome, cpf_cnpj, telefone, criado_em
+            SELECT $COLUNAS
             FROM pessoa
             ORDER BY id
         """.trimIndent()
@@ -40,13 +43,7 @@ class PessoaDAO(private val conn: Connection) {
         conn.prepareStatement(sql).use { stmt->
             stmt.executeQuery().use { rs ->
                 while (rs.next()) {
-                    pessoas.add(Pessoa(
-                        id = rs.getInt("id"),
-                        nome = rs.getString("nome"),
-                        cpfCnpj = rs.getString("cpf_cnpj"),
-                        telefone = rs.getString("telefone"),
-                        criadoEm = rs.getTimestamp("criadoEm").toLocalDateTime()
-                    ))
+                    pessoas.add(mapear(rs))
                 }
             }
         }
@@ -86,7 +83,7 @@ class PessoaDAO(private val conn: Connection) {
 
     fun buscarPorId(id: Int): Pessoa? {
         val sql = """
-            SELECT id, nome, cpf_cnpj, telefone, criado_em
+            SELECT $COLUNAS
             FROM pessoa
             WHERE id = ?
         """.trimIndent()
@@ -94,13 +91,23 @@ class PessoaDAO(private val conn: Connection) {
         conn.prepareStatement(sql).use { stmt->
             stmt.setInt(1, id)
             stmt.executeQuery().use { rs ->
-                if (rs.next()) return Pessoa(
-                    id = rs.getInt("id"),
-                    nome = rs.getString("nome"),
-                    cpfCnpj = rs.getString("cpf_cnpj"),
-                    telefone = rs.getString("telefone"),
-                    criadoEm = rs.getTimestamp("criado_em").toLocalDateTime()
-                )
+                if (rs.next()) return mapear(rs)
+            }
+        }
+        return null
+    }
+
+    fun buscarPorCpfCnpj(cpfCnpj: String): Pessoa? {
+        val sql = """
+            SELECT $COLUNAS
+            FROM pessoa
+            WHERE cpf_cnpj = ?
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { stmt->
+            stmt.setString(1, cpfCnpj)
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) return mapear(rs)
             }
         }
         return null
@@ -124,4 +131,12 @@ class PessoaDAO(private val conn: Connection) {
         }
         return ids
     }
+
+    private fun mapear(rs: ResultSet) = Pessoa(
+        id = rs.getInt("id"),
+        nome = rs.getString("nome"),
+        cpfCnpj = rs.getString("cpf_cnpj"),
+        telefone = rs.getString("telefone"),
+        criadoEm = rs.getTimestamp("criado_em").toLocalDateTime()
+    )
 }

@@ -39,13 +39,13 @@ SELECT id, 'Caixa da loja', 0
 --    e o Service antes do INSERT.
 -- -----------------------------------------------------------------------------
 INSERT INTO caixa_da_agua
-    (marca, modelo, capacidade_litros, altura, largura, profundidade,
+    (marca, modelo, capacidade, altura, largura, profundidade,
      cor, material, formato, preco, estoque_atual)
 VALUES
-    ('Tigre',   'Basic 310',      310, 0.55, 0.90, 0.90, 'AZUL', 'PVC', 'QUADRADA',  189.90, 12),
-    ('Tigre',   'Basic 500',      500, 0.65, 1.05, 1.05, 'AZUL', 'PVC', 'QUADRADA',  279.90,  8),
-    ('Fortlev', 'Standard 1000', 1000, 0.85, 1.30, 1.30, 'AZUL', 'PVC', 'QUADRADA',  549.90,  5),
-    ('Fortlev', 'Standard 2000', 2000, 1.05, 1.60, 1.60, 'AZUL', 'PVC', 'QUADRADA', 1049.90,  2);
+    ('Tigre',   'Basic 310',      310, 0.55, 0.90, 0.90, 'AZUL', 'POLIETILENO', 'QUADRADA',  189.90, 12),
+    ('Tigre',   'Basic 500',      500, 0.65, 1.05, 1.05, 'AZUL', 'POLIETILENO', 'QUADRADA',  279.90,  8),
+    ('Fortlev', 'Standard 1000', 1000, 0.85, 1.30, 1.30, 'AZUL', 'POLIETILENO', 'QUADRADA',  549.90,  5),
+    ('Fortlev', 'Standard 2000', 2000, 1.05, 1.60, 1.60, 'AZUL', 'POLIETILENO', 'QUADRADA', 1049.90,  2);
 
 
 -- =============================================================================

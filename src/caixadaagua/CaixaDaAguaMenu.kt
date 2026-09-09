@@ -10,7 +10,7 @@ import utils.lerInt
 import utils.lerTexto
 import java.sql.SQLException
 
-fun menu(service: CaixaDaAguaService) {
+fun menuCaixa(service: CaixaDaAguaService) {
 
     do {
         println("0 - VOLTAR AO MENU PRINCIPAL")

@@ -3,7 +3,8 @@ package db
 import java.sql.Connection
 
 fun <T> Connection.emTransacao(bloco: () -> T): T {
-    val anterior = autoCommit
+    if (!autoCommit) return bloco()
+
     autoCommit = false
     try {
         val resultado = bloco()
@@ -13,6 +14,6 @@ fun <T> Connection.emTransacao(bloco: () -> T): T {
         rollback()
         throw ex
     } finally {
-        autoCommit = anterior
+        autoCommit = true
     }
 }

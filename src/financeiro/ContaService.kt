@@ -1,5 +1,7 @@
 package financeiro
 
+import java.math.BigDecimal
+
 class ContaService(
     private val dao: ContaDAO
 ) {
@@ -16,6 +18,18 @@ class ContaService(
 
     fun remover(id: Int): Boolean =
         dao.remover(id)
+
+    fun daLoja(): Conta =
+        dao.buscarPorCpfCnpj(CNPJ_DA_LOJA)
+            ?: throw IllegalStateException(
+                "Conta da loja nao encontrada. Rode db/seed.sql ou ajuste CNPJ_DA_LOJA " +
+                    "em src/financeiro/Empresa.kt"
+            )
+
+    fun movimentarSaldo(contaId: Int, delta: BigDecimal) {
+        val atualizou = dao.atualizarSaldo(contaId, delta)
+        require(atualizou) { "Nao existe conta com o id $contaId" }
+    }
 
     fun listar(): List<Conta> =
         dao.listar()

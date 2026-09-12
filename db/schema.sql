@@ -130,6 +130,10 @@ CREATE TABLE caixa_da_agua (
     formato           VARCHAR(20)   NOT NULL,
     preco             NUMERIC(10,2) NOT NULL,
     estoque_atual     INTEGER       NOT NULL DEFAULT 0,
+    -- catalogo nao some. Modelo descontinuado vira ativo = FALSE: ele some da
+    -- lista de venda e continua existindo para as vendas antigas que o citam.
+    -- DELETE so e possivel enquanto nenhum venda_item apontar para a linha.
+    ativo             BOOLEAN       NOT NULL DEFAULT TRUE,
     criado_em         TIMESTAMP     NOT NULL DEFAULT now(),
 
     CONSTRAINT caixa_da_agua_modelo_uk UNIQUE (marca, modelo, capacidade),

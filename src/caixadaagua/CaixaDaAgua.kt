@@ -19,5 +19,6 @@ data class CaixaDaAgua(
     val formato: Formato,
     val preco: BigDecimal,
     val estoqueAtual: Int,
+    val ativo: Boolean = true,
     val criadoEm: LocalDateTime = LocalDateTime.now()
 )

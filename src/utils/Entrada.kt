@@ -46,9 +46,10 @@ fun lerDouble(rotulo: String, min: Double = 0.0, max: Double = Double.MAX_VALUE)
         normalizar(texto).toDoubleOrNull()?.takeIf { it in min..max }
     }
 
-fun lerBigDecimal(rotulo: String, min: BigDecimal = BigDecimal.ZERO): BigDecimal =
+fun lerBigDecimal(rotulo: String, min: BigDecimal = BigDecimal.ZERO, padrao: BigDecimal? = null): BigDecimal =
     lerAte(rotulo, "Digite um valor válido (ex.: 199,90).") { texto ->
-        normalizar(texto).toBigDecimalOrNull()?.takeIf { it >= min }
+        if (texto.isBlank()) padrao
+        else normalizar(texto).toBigDecimalOrNull()?.takeIf { it >= min }
     }
 
 fun lerData(rotulo: String, padrao: LocalDate? = null): LocalDate =
@@ -57,8 +58,20 @@ fun lerData(rotulo: String, padrao: LocalDate? = null): LocalDate =
         else runCatching { LocalDate.parse(texto, FORMATO_DATA) }.getOrNull()
     }
 
-fun <T> lerEnum(rotulo: String, valores: List<T>): T {
+fun lerSimNao(rotulo: String): Boolean =
+    lerAte("$rotulo (s/n)", "Responda s ou n.") { texto ->
+        when (texto.lowercase()) {
+            "s", "sim" -> true
+            "n", "nao", "não" -> false
+            else -> null
+        }
+    }
+
+fun <T> escolher(rotulo: String, opcoes: List<T>, descricao: (T) -> String): T {
     println(rotulo)
-    valores.forEachIndexed { i, v -> println(" ${i + 1} - $v") }
-    return valores[lerInt("Escolha:", 1, valores.size) - 1]
+    opcoes.forEachIndexed { i, opcao -> println(" ${i + 1} - ${descricao(opcao)}") }
+    return opcoes[lerInt("Escolha:", 1, opcoes.size) - 1]
 }
+
+fun <T> lerEnum(rotulo: String, valores: List<T>): T =
+    escolher(rotulo, valores) { it.toString() }

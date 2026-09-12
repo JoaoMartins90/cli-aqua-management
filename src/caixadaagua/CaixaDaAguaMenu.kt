@@ -18,6 +18,7 @@ fun menuCaixa(service: CaixaDaAguaService) {
         println("2 - REMOVER CAIXA DE AGUA")
         println("3 - ALTERAR CAIXA DE AGUA")
         println("4 - LISTAR CAIXA DE AGUA")
+        println("5 - REATIVAR CAIXA DE AGUA")
 
         val op = readln()
 
@@ -28,6 +29,7 @@ fun menuCaixa(service: CaixaDaAguaService) {
                 "2" -> remover(service)
                 "3" -> alterar(service)
                 "4" -> listar(service)
+                "5" -> reativar(service)
                 else -> println("Opção inválida!")
             }
         } catch (ex: IllegalArgumentException) {
@@ -94,8 +96,30 @@ private fun remover(service: CaixaDaAguaService) {
 
     val id = escolherId(service, "remover") ?: return
 
-    if (service.remover(id)) println("Caixa $id removida com sucesso")
-    else println("Nao foi possivel remover a caixa $id")
+    when (service.remover(id)) {
+        CaixaDaAguaService.Resultado.REMOVIDA ->
+            println("Caixa $id removida com sucesso")
+        CaixaDaAguaService.Resultado.DESATIVADA ->
+            println("Caixa $id já foi vendida: em vez de apagar, ela foi desativada e sai do catálogo de venda")
+        CaixaDaAguaService.Resultado.NADA_FEITO ->
+            println("Nao foi possivel remover a caixa $id")
+    }
+}
+
+private fun reativar(service: CaixaDaAguaService) {
+    println("=== REATIVAR CAIXA DE AGUA ===")
+
+    val inativas = service.listar().filter { !it.ativo }
+    if (inativas.isEmpty()) {
+        println("Nenhuma caixa inativa")
+        return
+    }
+
+    println("Inativas: ${inativas.map { it.id }}")
+    val id = lerInt("Id da caixa que deseja reativar:")
+
+    if (service.reativar(id)) println("Caixa $id voltou para o catálogo")
+    else println("Nao foi possivel reativar a caixa $id")
 }
 
 private fun listar(service: CaixaDaAguaService) {
@@ -123,6 +147,7 @@ private fun listar(service: CaixaDaAguaService) {
             Formato: ${c.formato}
             Preco: ${c.preco}
             Estoque: ${c.estoqueAtual}
+            Ativa: ${if (c.ativo) "sim" else "não"}
             Criado em: ${c.criadoEm}
             """.trimIndent()
         )

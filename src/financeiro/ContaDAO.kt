@@ -1,5 +1,6 @@
 package financeiro
 
+import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -78,6 +79,21 @@ class ContaDAO(private val conn: Connection) {
         }
     }
 
+    fun atualizarSaldo(id: Int, delta: BigDecimal): Boolean {
+        val sql = """
+            UPDATE conta SET
+            saldo = saldo + ?
+            WHERE id = ?
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setBigDecimal(1, delta)
+            stmt.setInt(2, id)
+
+            return stmt.executeUpdate() > 0
+        }
+    }
+
     fun buscarPorId(id: Int): Conta? {
         val sql = """
             SELECT $COLUNAS
@@ -103,6 +119,23 @@ class ContaDAO(private val conn: Connection) {
 
         conn.prepareStatement(sql).use { stmt ->
             stmt.setInt(1, pessoaId)
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) return mapear(rs)
+            }
+        }
+        return null
+    }
+
+    fun buscarPorCpfCnpj(cpfCnpj: String): Conta? {
+        val sql = """
+            SELECT c.id, c.pessoa_id, c.descricao, c.saldo
+            FROM conta c
+            JOIN pessoa p ON p.id = c.pessoa_id
+            WHERE p.cpf_cnpj = ?
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setString(1, cpfCnpj)
             stmt.executeQuery().use { rs ->
                 if (rs.next()) return mapear(rs)
             }

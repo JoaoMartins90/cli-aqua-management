@@ -95,6 +95,22 @@ class PessoaService(
     fun idsExistentes(): List<Int> =
         dao.listarIdsPessoa()
 
+    fun clienteDe(pessoaId: Int): Cliente? =
+        clientes.buscarPorPessoaId(pessoaId)
+
+    fun funcionariosAtivos(): List<Funcionario> =
+        funcionarios.listarAtivos()
+
+    fun nomeDe(pessoaId: Int): String =
+        dao.buscarPorId(pessoaId)?.nome ?: "(pessoa $pessoaId)"
+
+    fun nomeDoCliente(clienteId: Int): String =
+        clientes.buscarPorId(clienteId)?.let { nomeDe(it.pessoaId) } ?: "(cliente $clienteId)"
+
+    fun nomeDoFuncionario(funcionarioId: Int): String =
+        funcionarios.buscarPorId(funcionarioId)?.let { nomeDe(it.pessoaId) }
+            ?: "(funcionário $funcionarioId)"
+
     private fun exigirPessoa(pessoaId: Int): Pessoa =
         dao.buscarPorId(pessoaId)
             ?: throw IllegalArgumentException("Não existe pessoa com o id $pessoaId")

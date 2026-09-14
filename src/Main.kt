@@ -3,6 +3,9 @@ import caixadaagua.CaixaDaAguaService
 import caixadaagua.menuCaixa
 import cliente.ClienteDAO
 import cliente.ClienteService
+import conferencia.ConferenciaDAO
+import conferencia.ConferenciaService
+import conferencia.mostrarConferencia
 import db.ConnectionFactory.getConnection
 import financeiro.ContaDAO
 import financeiro.ContaService
@@ -54,13 +57,15 @@ class App(conn: Connection) {
         clientes,
         funcionarios
     )
+    val conferencia = ConferenciaService(ConferenciaDAO(conn))
 }
 
 fun main() {
 
     getConnection().use { conn ->
-        menuPrincipal(App(conn))
-
+        val app = App(conn)
+        mostrarConferencia(app.conferencia)
+        menuPrincipal(app)
     }
 
 }

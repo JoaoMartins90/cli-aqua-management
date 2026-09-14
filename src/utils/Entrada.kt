@@ -3,11 +3,13 @@ package utils
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import kotlin.system.exitProcess
 
 private val FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 private val FORMATO_DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+private val FORMATO_MES_ANO = DateTimeFormatter.ofPattern("MM/yyyy")
 
 private fun lerLinha(rotulo: String): String {
     print("$rotulo ")
@@ -55,7 +57,7 @@ fun lerBigDecimal(rotulo: String, min: BigDecimal = BigDecimal.ZERO, padrao: Big
     lerAte(rotulo, "Digite um valor válido, com até 2 casas decimais (ex.: 199,90).") { texto ->
         if (texto.isBlank()) padrao
         else normalizar(texto).toBigDecimalOrNull()
-            ?.takeIf { it >= min && it.stripTrailingZeros().scale() <= 2 }
+            ?.takeIf { it >= min && it.temAteDuasCasas() }
     }
 
 fun lerData(rotulo: String, padrao: LocalDate? = null): LocalDate =
@@ -68,6 +70,12 @@ fun lerDataHora(rotulo: String, padrao: LocalDateTime? = null): LocalDateTime =
     lerAte(rotulo, "Digite data e hora válidas (ex.: 31/12/2025 14:30).") { texto ->
         if (texto.isBlank()) padrao
         else runCatching { LocalDateTime.parse(texto, FORMATO_DATA_HORA) }.getOrNull()
+    }
+
+fun lerMesAno(rotulo: String, padrao: YearMonth? = null): YearMonth =
+    lerAte(rotulo, "Digite mês e ano válidos (ex.: 09/2026).") { texto ->
+        if (texto.isBlank()) padrao
+        else runCatching { YearMonth.parse(texto, FORMATO_MES_ANO) }.getOrNull()
     }
 
 fun lerSimNao(rotulo: String): Boolean =

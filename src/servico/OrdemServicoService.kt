@@ -3,6 +3,7 @@ package servico
 import cliente.ClienteService
 import enums.StatusOrdemServico
 import funcionario.FuncionarioService
+import utils.temAteDuasCasas
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -89,6 +90,9 @@ class OrdemServicoService(
     fun buscarPorId(id: Int): OrdemServico? =
         dao.buscarPorId(id)
 
+    fun aFaturar(): List<OrdemServico> =
+        dao.listarAFaturar()
+
     fun aFaturarDoCliente(clienteId: Int): List<OrdemServico> =
         dao.listarAFaturarDoCliente(clienteId)
 
@@ -113,7 +117,7 @@ class OrdemServicoService(
 
     private fun validar(o: OrdemServico) {
         require(o.preco >= BigDecimal.ZERO) { "Preco nao pode ser negativo" }
-        require(o.preco.stripTrailingZeros().scale() <= 2) { "Preco nao pode ter mais de 2 casas decimais" }
+        require(o.preco.temAteDuasCasas()) { "Preco nao pode ter mais de 2 casas decimais" }
         require((o.observacao?.length ?: 0) <= 255) { "Observacao pode ter no maximo 255 caracteres" }
     }
 }

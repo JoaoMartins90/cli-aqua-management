@@ -11,6 +11,7 @@ import funcionario.FuncionarioService
 import movimentacao.Movimento
 import movimentacao.MovimentoService
 import servico.OrdemServicoService
+import utils.temAteDuasCasas
 import java.math.BigDecimal
 import java.sql.Connection
 
@@ -142,7 +143,7 @@ class VendaService(
             require(item.precoUnitario >= BigDecimal.ZERO) {
                 "Preco do item nao pode ser negativo"
             }
-            require(item.precoUnitario.stripTrailingZeros().scale() <= 2) {
+            require(item.precoUnitario.temAteDuasCasas()) {
                 "Preco do item nao pode ter mais de 2 casas decimais"
             }
             require(item.descricao.isNotBlank()) { "Item da venda precisa de descricao" }

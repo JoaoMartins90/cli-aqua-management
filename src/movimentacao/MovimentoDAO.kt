@@ -84,6 +84,43 @@ class MovimentoDAO(private val conn: Connection) {
         return movimentos
     }
 
+    fun listarPorConta(contaId: Int): List<Movimento> {
+        val movimentos = mutableListOf<Movimento>()
+
+        val sql = """
+            SELECT $COLUNAS
+            FROM movimento
+            WHERE conta_id = ?
+            ORDER BY data_movimentacao, id
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setInt(1, contaId)
+            stmt.executeQuery().use { rs ->
+                while (rs.next()) {
+                    movimentos.add(mapear(rs))
+                }
+            }
+        }
+        return movimentos
+    }
+
+    fun buscarEstornoDe(movimentoId: Int): Movimento? {
+        val sql = """
+            SELECT $COLUNAS
+            FROM movimento
+            WHERE estorno_de_id = ?
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setInt(1, movimentoId)
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) return mapear(rs)
+            }
+        }
+        return null
+    }
+
     fun buscarPorId(id: Int): Movimento? {
         val sql = """
             SELECT $COLUNAS

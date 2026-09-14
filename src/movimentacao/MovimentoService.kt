@@ -2,6 +2,7 @@ package movimentacao
 
 import db.emTransacao
 import financeiro.ContaService
+import utils.temAteDuasCasas
 import java.math.BigDecimal
 import java.sql.Connection
 import java.time.LocalDateTime
@@ -26,6 +27,9 @@ class MovimentoService(
             require(original.estornoDeId == null) {
                 "O movimento $movimentoId ja e um estorno"
             }
+            require(dao.buscarEstornoDe(movimentoId) == null) {
+                "O movimento $movimentoId ja foi estornado"
+            }
 
             registrar(
                 original.copy(
@@ -44,12 +48,16 @@ class MovimentoService(
     fun listarPorVenda(vendaId: Int): List<Movimento> =
         dao.listarPorVenda(vendaId)
 
+    fun listarPorConta(contaId: Int): List<Movimento> =
+        dao.listarPorConta(contaId)
+
     fun buscarPorId(id: Int): Movimento? =
         dao.buscarPorId(id)
 
     private fun validar(m: Movimento) {
         require(m.contaId > 0) { "Movimento precisa apontar para uma conta" }
         require(m.valor > BigDecimal.ZERO) { "Valor do movimento deve ser maior que zero" }
+        require(m.valor.temAteDuasCasas()) { "Valor do movimento nao pode ter mais de 2 casas decimais" }
         require(m.descricao.isNotBlank()) { "Movimento precisa de uma descricao" }
     }
 }

@@ -102,6 +102,26 @@ class OrdemServicoDAO(private val conn: Connection) {
         return null
     }
 
+    fun listarAFaturar(): List<OrdemServico> {
+        val ordens = mutableListOf<OrdemServico>()
+
+        val sql = """
+            SELECT $COLUNAS
+            FROM ordem_servico
+            WHERE id IN (SELECT ordem_id FROM vw_ordem_servico_a_faturar)
+            ORDER BY data_conclusao
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.executeQuery().use { rs ->
+                while (rs.next()) {
+                    ordens.add(mapear(rs))
+                }
+            }
+        }
+        return ordens
+    }
+
     fun listarAFaturarDoCliente(clienteId: Int): List<OrdemServico> {
         val ordens = mutableListOf<OrdemServico>()
 

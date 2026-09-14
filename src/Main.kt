@@ -6,6 +6,9 @@ import cliente.ClienteService
 import db.ConnectionFactory.getConnection
 import financeiro.ContaDAO
 import financeiro.ContaService
+import financeiro.FinanceiroDAO
+import financeiro.FinanceiroService
+import financeiro.menuFinanceiro
 import funcionario.FuncionarioDAO
 import funcionario.FuncionarioService
 import movimentacao.MovimentoDAO
@@ -42,6 +45,15 @@ class App(conn: Connection) {
         clientes,
         funcionarios
     )
+    val financeiro = FinanceiroService(
+        conn,
+        FinanceiroDAO(conn),
+        contas,
+        movimentos,
+        vendas,
+        clientes,
+        funcionarios
+    )
 }
 
 fun main() {
@@ -58,6 +70,7 @@ fun menuPrincipal(app: App) {
         println("0 - SAIR")
         println("1 - CADASTROS")
         println("2 - OPERACAO")
+        println("3 - FINANCEIRO")
 
         val op = lerOpcao()
 
@@ -65,6 +78,7 @@ fun menuPrincipal(app: App) {
             "0" -> println("Sistema encerrado")
             "1" -> menuCadastros(app)
             "2" -> menuOperacao(app)
+            "3" -> menuFinanceiro(app.financeiro, app.ordens, app.pessoa)
             else -> println("Opção inválida")
         }
     } while (op != "0")

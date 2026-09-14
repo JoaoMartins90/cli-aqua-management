@@ -29,9 +29,9 @@ class CaixaDaAguaDAO(private val conn: Connection) {
             stmt.setString(1, caixaDaAgua.marca)
             stmt.setString(2, caixaDaAgua.modelo)
             stmt.setInt(3, caixaDaAgua.capacidade)
-            stmt.setDouble(4, caixaDaAgua.altura)
-            stmt.setDouble(5, caixaDaAgua.largura)
-            stmt.setDouble(6, caixaDaAgua.profundidade)
+            stmt.setBigDecimal(4, caixaDaAgua.altura)
+            stmt.setBigDecimal(5, caixaDaAgua.largura)
+            stmt.setBigDecimal(6, caixaDaAgua.profundidade)
             stmt.setString(7, caixaDaAgua.cor.name)
             stmt.setString(8, caixaDaAgua.material.name)
             stmt.setString(9, caixaDaAgua.formato.name)
@@ -174,9 +174,9 @@ class CaixaDaAguaDAO(private val conn: Connection) {
             stmt.setString(1, caixa.marca)
             stmt.setString(2, caixa.modelo)
             stmt.setInt(3, caixa.capacidade)
-            stmt.setDouble(4, caixa.altura)
-            stmt.setDouble(5, caixa.largura)
-            stmt.setDouble(6, caixa.profundidade)
+            stmt.setBigDecimal(4, caixa.altura)
+            stmt.setBigDecimal(5, caixa.largura)
+            stmt.setBigDecimal(6, caixa.profundidade)
             stmt.setString(7, caixa.cor.name)
             stmt.setString(8, caixa.material.name)
             stmt.setString(9, caixa.formato.name)
@@ -246,9 +246,9 @@ class CaixaDaAguaDAO(private val conn: Connection) {
         marca = rs.getString("marca"),
         modelo = rs.getString("modelo"),
         capacidade = rs.getInt("capacidade"),
-        altura = rs.getDouble("altura"),
-        largura = rs.getDouble("largura"),
-        profundidade = rs.getDouble("profundidade"),
+        altura = rs.getBigDecimal("altura"),
+        largura = rs.getBigDecimal("largura"),
+        profundidade = rs.getBigDecimal("profundidade"),
         cor = rs.enumDe<Cor>("cor"),
         material = rs.enumDe<Material>("material"),
         formato = rs.enumDe<Formato>("formato"),

@@ -158,7 +158,8 @@ CREATE TABLE caixa_da_agua (
 --
 --    Nao existe FATURADO. "Ja foi cobrada?" nao e estado do trabalho, e um fato
 --    do financeiro, e ja da para responder olhando venda_item: se existe um item
---    apontando para a ordem, ela foi faturada (ver vw_ordem_servico_a_faturar).
+--    de uma venda EFETIVADA apontando para a ordem, ela foi faturada (ver
+--    vw_ordem_servico_a_faturar). Venda cancelada devolve a ordem para a fila.
 --    Guardar isso tambem no status criaria duas verdades que podem divergir -
 --    venda cancelada e ordem parada em FATURADO para sempre.
 --
@@ -350,9 +351,11 @@ CREATE INDEX ix_venda_data        ON venda (data_venda);
 
 CREATE INDEX ix_venda_item_venda ON venda_item (venda_id);
 CREATE INDEX ix_venda_item_caixa ON venda_item (caixa_da_agua_id);
--- uma ordem de servico so pode ser faturada uma vez
-CREATE UNIQUE INDEX ux_venda_item_ordem ON venda_item (ordem_servico_id)
-    WHERE ordem_servico_id IS NOT NULL;
+-- "uma ordem so pode ser faturada uma vez" nao cabe num UNIQUE: a regra e uma
+-- vez por venda EFETIVADA, e o status mora em outra tabela. Um indice unico
+-- prenderia a ordem para sempre na venda cancelada. Quem garante e o
+-- VendaService, dentro da transacao da venda.
+CREATE INDEX ix_venda_item_ordem ON venda_item (ordem_servico_id);
 
 CREATE INDEX ix_movimento_conta  ON movimento (conta_id);
 CREATE INDEX ix_movimento_venda  ON movimento (venda_id);
@@ -401,8 +404,9 @@ SELECT os.id AS ordem_id,
  WHERE os.status IN ('AGENDADO', 'EM_EXECUCAO');
 
 -- 2) O QUE FOI FEITO E NAO FOI COBRADO. Substitui o antigo status FATURADO:
---    a ordem esta concluida e nao existe nenhum item de venda apontando para
---    ela. Serve de fila de faturamento - e o dinheiro esquecido na gaveta.
+--    a ordem esta concluida e nao existe item de venda EFETIVADA apontando
+--    para ela - item de venda cancelada nao conta. Serve de fila de
+--    faturamento - e o dinheiro esquecido na gaveta.
 CREATE VIEW vw_ordem_servico_a_faturar AS
 SELECT os.id AS ordem_id,
        os.data_conclusao,
@@ -413,7 +417,13 @@ SELECT os.id AS ordem_id,
   JOIN cliente  c ON  c.id = os.cliente_id
   JOIN pessoa  pc ON pc.id = c.pessoa_id
  WHERE os.status = 'CONCLUIDO'
-   AND NOT EXISTS (SELECT 1 FROM venda_item vi WHERE vi.ordem_servico_id = os.id);
+   AND NOT EXISTS (
+        SELECT 1
+          FROM venda_item vi
+          JOIN venda v ON v.id = vi.venda_id
+         WHERE vi.ordem_servico_id = os.id
+           AND v.status = 'EFETIVADA'
+   );
 
 -- 3) QUEM ME DEVE. Para cada venda efetivada: valor_total menos a soma dos
 --    movimentos daquela venda; so aparece quem sobrou saldo. E a prova de que

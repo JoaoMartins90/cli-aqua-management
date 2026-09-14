@@ -10,6 +10,7 @@ import financeiro.ContaService
 import funcionario.FuncionarioService
 import movimentacao.Movimento
 import movimentacao.MovimentoService
+import servico.OrdemServicoService
 import java.math.BigDecimal
 import java.sql.Connection
 
@@ -18,6 +19,7 @@ class VendaService(
     private val dao: VendaDAO,
     private val itens: VendaItemDAO,
     private val caixas: CaixaDaAguaService,
+    private val ordens: OrdemServicoService,
     private val movimentos: MovimentoService,
     private val contas: ContaService,
     private val clientes: ClienteService,
@@ -106,7 +108,8 @@ class VendaService(
 
     private fun validar(pedido: Pedido) {
         require(pedido.itens.isNotEmpty()) { "A venda precisa de ao menos um item" }
-        require(clientes.buscarPorId(pedido.clienteId) != null) {
+        val cliente = clientes.buscarPorId(pedido.clienteId)
+        require(cliente != null) {
             "Nao existe cliente com o id ${pedido.clienteId}"
         }
 
@@ -122,6 +125,15 @@ class VendaService(
             }
         }
 
+        if (pedido.condicaoPagamento == CondicaoPagamento.A_PRAZO) {
+            val devedor = dao.saldoDevedorDoCliente(cliente.id!!)
+            val disponivel = cliente.limiteCredito - devedor
+            require(pedido.valorTotal <= disponivel) {
+                "Limite de credito insuficiente: limite R\$ ${cliente.limiteCredito}, " +
+                    "ja deve R\$ $devedor, disponivel R\$ $disponivel, venda de R\$ ${pedido.valorTotal}"
+            }
+        }
+
         pedido.itens.forEach { item ->
             require((item.caixaDaAguaId == null) != (item.ordemServicoId == null)) {
                 "Item da venda tem que ser uma caixa OU uma ordem de servico"
@@ -130,7 +142,28 @@ class VendaService(
             require(item.precoUnitario >= BigDecimal.ZERO) {
                 "Preco do item nao pode ser negativo"
             }
+            require(item.precoUnitario.stripTrailingZeros().scale() <= 2) {
+                "Preco do item nao pode ter mais de 2 casas decimais"
+            }
             require(item.descricao.isNotBlank()) { "Item da venda precisa de descricao" }
+
+            item.caixaDaAguaId?.let { caixaId ->
+                val caixa = caixas.buscarPorId(caixaId)
+                require(caixa != null) { "Nao existe caixa com o id $caixaId" }
+                require(caixa.ativo) {
+                    "${caixa.marca} ${caixa.modelo} saiu do catalogo e nao pode ser vendida"
+                }
+            }
+
+            item.ordemServicoId?.let { ordemId ->
+                require(item.quantidade == 1) { "Ordem de servico entra na venda com quantidade 1" }
+                ordens.exigirFaturavel(ordemId, pedido.clienteId)
+            }
+        }
+
+        val ordensNoPedido = pedido.itens.mapNotNull { it.ordemServicoId }
+        require(ordensNoPedido.size == ordensNoPedido.toSet().size) {
+            "A mesma ordem de servico aparece mais de uma vez na venda"
         }
     }
 }

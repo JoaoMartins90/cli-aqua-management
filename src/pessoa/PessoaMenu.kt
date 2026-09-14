@@ -1,11 +1,14 @@
 package pessoa
 
 import enums.Setor
+import utils.escolher
 import utils.lerBigDecimal
 import utils.lerData
 import utils.lerDigitos
 import utils.lerEnum
 import utils.lerInt
+import utils.lerOpcao
+import utils.lerSimNao
 import utils.lerTexto
 import java.math.BigDecimal
 import java.sql.SQLException
@@ -17,13 +20,13 @@ private const val FUNCIONARIO = "FUNCIONARIO"
 fun menuPessoa(service: PessoaService) {
 
     do {
-        println("0 - VOLTAR AO MENU PRINCIPAL")
+        println("0 - VOLTAR AOS CADASTROS")
         println("1 - CADASTRAR PESSOA / ADICIONAR PAPEL")
         println("2 - LISTAR PESSOAS")
         println("3 - ALTERAR PESSOA")
         println("4 - REMOVER PESSOA")
 
-        val op = readln()
+        val op = lerOpcao()
 
         try {
             when (op) {
@@ -166,6 +169,46 @@ private fun escolherId(service: PessoaService, acao: String): Int? {
         return null
     }
     return id
+}
+
+fun identificarCliente(service: PessoaService): Int? {
+    val cpfCnpj = lerDigitos("CPF ou CNPJ do cliente:", listOf(11, 14))
+
+    val pessoa = service.buscarPorCpfCnpj(cpfCnpj) ?: cadastrarNaHora(service, cpfCnpj) ?: return null
+
+    val cliente = service.clienteDe(pessoa.id!!)
+    if (cliente != null) {
+        println("Cliente: ${pessoa.nome}")
+        return cliente.id
+    }
+
+    println("${pessoa.nome} está cadastrado, mas ainda não é cliente.")
+    if (!lerSimNao("Tornar cliente agora?")) return null
+    return service.tornarCliente(pessoa.id, lerBigDecimal("Limite de crédito:"))
+}
+
+fun escolherFuncionarioAtivo(service: PessoaService, rotulo: String): Int? {
+    val ativos = service.funcionariosAtivos()
+    if (ativos.isEmpty()) {
+        println("Nenhum funcionário ativo. Cadastre um em CADASTROS > PESSOAS.")
+        return null
+    }
+
+    return escolher(rotulo, ativos) { "${service.nomeDe(it.pessoaId)} - ${it.setor}" }.id
+}
+
+private fun cadastrarNaHora(service: PessoaService, cpfCnpj: String): Pessoa? {
+    println("Documento não cadastrado.")
+    if (!lerSimNao("Cadastrar a pessoa agora?")) return null
+
+    val id = service.cadastrar(
+        Pessoa(
+            nome = lerTexto("Nome:", minimo = 3),
+            cpfCnpj = cpfCnpj,
+            telefone = lerDigitos("Telefone com DDD:", listOf(10, 11))
+        )
+    )
+    return service.buscarPorId(id)
 }
 
 private fun descreverPapeis(papeis: List<String>) =

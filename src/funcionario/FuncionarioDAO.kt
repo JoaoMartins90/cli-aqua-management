@@ -1,5 +1,6 @@
 package funcionario
 
+import db.enumDe
 import enums.Setor
 import java.sql.Connection
 import java.sql.Date
@@ -157,7 +158,7 @@ class FuncionarioDAO(private val conn: Connection) {
     private fun mapear(rs: ResultSet) = Funcionario(
         id = rs.getInt("id"),
         pessoaId = rs.getInt("pessoa_id"),
-        setor = Setor.valueOf(rs.getString("setor")),
+        setor = rs.enumDe<Setor>("setor"),
         salario = rs.getBigDecimal("salario"),
         dataAdmissao = rs.getDate("data_admissao").toLocalDate(),
         dataDemissao = rs.getDate("data_demissao")?.toLocalDate()

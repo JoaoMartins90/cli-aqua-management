@@ -73,7 +73,7 @@ class CaixaDaAguaService(
         require(c.marca.isNotBlank()) { "Marca nao pode ser vazia" }
         require(c.modelo.isNotBlank()) { "Modelo nao pode ser vazio" }
         require(c.capacidade > 0) { "Capacidade deve ser maior que zero" }
-        require(c.altura > 0 && c.largura > 0 && c.profundidade > 0) {
+        require(listOf(c.altura, c.largura, c.profundidade).all { it > BigDecimal.ZERO }) {
             "Altura, largura e profundidade devem ser maiores que zero"
         }
         require(c.preco > BigDecimal.ZERO) { "Preco deve ser maior que zero" }

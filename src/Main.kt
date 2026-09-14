@@ -13,6 +13,10 @@ import movimentacao.MovimentoService
 import pessoa.PessoaDAO
 import pessoa.PessoaService
 import pessoa.menuPessoa
+import servico.OrdemServicoDAO
+import servico.OrdemServicoService
+import servico.menuOrdemServico
+import utils.lerOpcao
 import venda.VendaDAO
 import venda.VendaItemDAO
 import venda.VendaService
@@ -26,11 +30,13 @@ class App(conn: Connection) {
     val contas = ContaService(ContaDAO(conn))
     val movimentos = MovimentoService(conn, MovimentoDAO(conn), contas)
     val pessoa = PessoaService(conn, PessoaDAO(conn), clientes, funcionarios, contas)
+    val ordens = OrdemServicoService(OrdemServicoDAO(conn), clientes, funcionarios)
     val vendas = VendaService(
         conn,
         VendaDAO(conn),
         VendaItemDAO(conn),
         caixa,
+        ordens,
         movimentos,
         contas,
         clientes,
@@ -53,12 +59,12 @@ fun menuPrincipal(app: App) {
         println("1 - CADASTROS")
         println("2 - OPERACAO")
 
-        val op = readln()
+        val op = lerOpcao()
 
         when (op) {
             "0" -> println("Sistema encerrado")
             "1" -> menuCadastros(app)
-            "2" -> menuVenda(app.vendas, app.pessoa, app.caixa)
+            "2" -> menuOperacao(app)
             else -> println("Opção inválida")
         }
     } while (op != "0")
@@ -70,12 +76,29 @@ fun menuCadastros(app: App) {
         println("1 - PESSOAS (CLIENTE / FUNCIONARIO / CONTA)")
         println("2 - CAIXAS DE AGUA")
 
-        val op = readln()
+        val op = lerOpcao()
 
         when (op) {
             "0" -> {}
             "1" -> menuPessoa(app.pessoa)
             "2" -> menuCaixa(app.caixa)
+            else -> println("Opção inválida")
+        }
+    } while (op != "0")
+}
+
+fun menuOperacao(app: App) {
+    do {
+        println("0 - VOLTAR AO MENU PRINCIPAL")
+        println("1 - VENDAS")
+        println("2 - ORDENS DE SERVICO")
+
+        val op = lerOpcao()
+
+        when (op) {
+            "0" -> {}
+            "1" -> menuVenda(app.vendas, app.pessoa, app.caixa, app.ordens)
+            "2" -> menuOrdemServico(app.ordens, app.pessoa)
             else -> println("Opção inválida")
         }
     } while (op != "0")

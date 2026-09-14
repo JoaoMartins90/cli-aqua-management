@@ -3,6 +3,7 @@ package venda
 import db.enumDe
 import enums.CondicaoPagamento
 import enums.StatusVenda
+import java.math.BigDecimal
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -88,6 +89,23 @@ class VendaDAO(private val conn: Connection) {
             }
         }
         return null
+    }
+
+    fun saldoDevedorDoCliente(clienteId: Int): BigDecimal {
+        val sql = """
+            SELECT COALESCE(SUM(cr.saldo_devedor), 0) AS devedor
+            FROM vw_contas_receber cr
+            JOIN venda v ON v.id = cr.venda_id
+            WHERE v.cliente_id = ?
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setInt(1, clienteId)
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) return rs.getBigDecimal("devedor")
+            }
+        }
+        return BigDecimal.ZERO
     }
 
     fun listarIdsVendas(): List<Int> {

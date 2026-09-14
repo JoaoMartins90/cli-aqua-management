@@ -2,10 +2,12 @@ package utils
 
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.system.exitProcess
 
 private val FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+private val FORMATO_DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
 
 private fun lerLinha(rotulo: String): String {
     print("$rotulo ")
@@ -24,6 +26,9 @@ private fun <T> lerAte(rotulo: String, erro: String, converter: (String) -> T?):
 
 private fun normalizar(texto: String) =
     if (',' in texto) texto.replace(',', '.') else texto
+
+fun lerOpcao(): String =
+    lerLinha("Opção:").trim()
 
 fun lerTexto(rotulo: String, obrigatorio: Boolean = true, minimo: Int = 1): String =
     lerAte(rotulo, "Esse campo precisa de pelo menos $minimo caractere(s)") { texto ->
@@ -47,15 +52,22 @@ fun lerDouble(rotulo: String, min: Double = 0.0, max: Double = Double.MAX_VALUE)
     }
 
 fun lerBigDecimal(rotulo: String, min: BigDecimal = BigDecimal.ZERO, padrao: BigDecimal? = null): BigDecimal =
-    lerAte(rotulo, "Digite um valor válido (ex.: 199,90).") { texto ->
+    lerAte(rotulo, "Digite um valor válido, com até 2 casas decimais (ex.: 199,90).") { texto ->
         if (texto.isBlank()) padrao
-        else normalizar(texto).toBigDecimalOrNull()?.takeIf { it >= min }
+        else normalizar(texto).toBigDecimalOrNull()
+            ?.takeIf { it >= min && it.stripTrailingZeros().scale() <= 2 }
     }
 
 fun lerData(rotulo: String, padrao: LocalDate? = null): LocalDate =
     lerAte(rotulo, "Digite uma data válida (ex.: 31/12/2025).") { texto ->
         if (texto.isBlank()) padrao
         else runCatching { LocalDate.parse(texto, FORMATO_DATA) }.getOrNull()
+    }
+
+fun lerDataHora(rotulo: String, padrao: LocalDateTime? = null): LocalDateTime =
+    lerAte(rotulo, "Digite data e hora válidas (ex.: 31/12/2025 14:30).") { texto ->
+        if (texto.isBlank()) padrao
+        else runCatching { LocalDateTime.parse(texto, FORMATO_DATA_HORA) }.getOrNull()
     }
 
 fun lerSimNao(rotulo: String): Boolean =

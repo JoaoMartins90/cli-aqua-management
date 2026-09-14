@@ -1,36 +1,44 @@
 package venda
 
+import caixadaagua.CaixaDaAgua
 import caixadaagua.CaixaDaAguaService
 import enums.CondicaoPagamento
 import enums.FormaPagamento
-import pessoa.Pessoa
 import pessoa.PessoaService
+import pessoa.escolherFuncionarioAtivo
+import pessoa.identificarCliente
+import servico.OrdemServico
+import servico.OrdemServicoService
 import utils.escolher
 import utils.lerBigDecimal
-import utils.lerDigitos
 import utils.lerInt
+import utils.lerOpcao
 import utils.lerSimNao
 import utils.lerTexto
 import java.sql.SQLException
 
+private const val CAIXA = "Caixa d'água"
+private const val ORDEM = "Ordem de serviço concluída"
+
 fun menuVenda(
     vendas: VendaService,
     pessoas: PessoaService,
-    caixas: CaixaDaAguaService
+    caixas: CaixaDaAguaService,
+    ordens: OrdemServicoService
 ) {
     do {
-        println("0 - VOLTAR AO MENU PRINCIPAL")
+        println("0 - VOLTAR A OPERACAO")
         println("1 - NOVA VENDA")
         println("2 - LISTAR VENDAS")
         println("3 - DETALHE DA VENDA")
         println("4 - CANCELAR VENDA")
 
-        val op = readln()
+        val op = lerOpcao()
 
         try {
             when (op) {
                 "0" -> {}
-                "1" -> novaVenda(vendas, pessoas, caixas)
+                "1" -> novaVenda(vendas, pessoas, caixas, ordens)
                 "2" -> listar(vendas, pessoas)
                 "3" -> detalhe(vendas, pessoas)
                 "4" -> cancelar(vendas)
@@ -49,14 +57,15 @@ fun menuVenda(
 private fun novaVenda(
     vendas: VendaService,
     pessoas: PessoaService,
-    caixas: CaixaDaAguaService
+    caixas: CaixaDaAguaService,
+    ordens: OrdemServicoService
 ) {
     println("=== NOVA VENDA ===")
 
     val clienteId = identificarCliente(pessoas) ?: return
-    val funcionarioId = identificarVendedor(pessoas) ?: return
+    val funcionarioId = escolherFuncionarioAtivo(pessoas, "Vendedor:") ?: return
 
-    val itens = montarItens(caixas)
+    val itens = montarItens(clienteId, caixas, ordens)
     if (itens.isEmpty()) {
         println("Venda sem itens. Nada foi gravado.")
         return
@@ -90,81 +99,76 @@ private fun novaVenda(
     }
 }
 
-private fun identificarCliente(pessoas: PessoaService): Int? {
-    val cpfCnpj = lerDigitos("CPF ou CNPJ do cliente:", listOf(11, 14))
-
-    val pessoa = pessoas.buscarPorCpfCnpj(cpfCnpj) ?: cadastrarNaHora(pessoas, cpfCnpj) ?: return null
-
-    val cliente = pessoas.clienteDe(pessoa.id!!)
-    if (cliente != null) {
-        println("Cliente: ${pessoa.nome}")
-        return cliente.id
-    }
-
-    println("${pessoa.nome} está cadastrado, mas ainda não é cliente.")
-    if (!lerSimNao("Tornar cliente agora?")) return null
-    return pessoas.tornarCliente(pessoa.id, lerBigDecimal("Limite de crédito:"))
-}
-
-private fun cadastrarNaHora(pessoas: PessoaService, cpfCnpj: String): Pessoa? {
-    println("Documento não cadastrado.")
-    if (!lerSimNao("Cadastrar a pessoa agora?")) return null
-
-    val id = pessoas.cadastrar(
-        Pessoa(
-            nome = lerTexto("Nome:", minimo = 3),
-            cpfCnpj = cpfCnpj,
-            telefone = lerDigitos("Telefone com DDD:", listOf(10, 11))
-        )
-    )
-    return pessoas.buscarPorId(id)
-}
-
-private fun identificarVendedor(pessoas: PessoaService): Int? {
-    val ativos = pessoas.funcionariosAtivos()
-    if (ativos.isEmpty()) {
-        println("Nenhum funcionário ativo. Cadastre um antes de vender.")
-        return null
-    }
-
-    val vendedor = escolher("Vendedor:", ativos) {
-        "${pessoas.nomeDe(it.pessoaId)} - ${it.setor}"
-    }
-    return vendedor.id
-}
-
-private fun montarItens(caixas: CaixaDaAguaService): List<VendaItem> {
+private fun montarItens(
+    clienteId: Int,
+    caixas: CaixaDaAguaService,
+    ordens: OrdemServicoService
+): List<VendaItem> {
     val itens = mutableListOf<VendaItem>()
 
+    fun restante(caixa: CaixaDaAgua) =
+        caixa.estoqueAtual - itens.filter { it.caixaDaAguaId == caixa.id }.sumOf { it.quantidade }
+
     do {
-        val disponiveis = caixas.listarAtivas().filter { it.estoqueAtual > 0 }
-        if (disponiveis.isEmpty()) {
-            println("Nenhuma caixa ativa com estoque.")
-            break
-        }
+        val caixasDisponiveis = caixas.listarAtivas().filter { restante(it) > 0 }
+        val ordensDisponiveis = ordens.aFaturarDoCliente(clienteId)
+            .filter { ordem -> itens.none { it.ordemServicoId == ordem.id } }
 
-        val caixa = escolher("Caixa:", disponiveis) {
-            "${it.marca} ${it.modelo} ${it.capacidade}l - R\$ ${it.preco} (estoque ${it.estoqueAtual})"
+        val tipo = when {
+            caixasDisponiveis.isEmpty() && ordensDisponiveis.isEmpty() -> {
+                println("Não há caixa com estoque nem ordem de serviço a cobrar deste cliente.")
+                break
+            }
+            ordensDisponiveis.isEmpty() -> CAIXA
+            caixasDisponiveis.isEmpty() -> ORDEM
+            else -> escolher("Tipo de item:", listOf(CAIXA, ORDEM)) { it }
         }
-
-        val quantidade = lerInt("Quantidade:", min = 1, max = caixa.estoqueAtual)
-        val preco = lerBigDecimal(
-            "Preço unitário (Enter para ${caixa.preco}):",
-            padrao = caixa.preco
-        )
 
         itens.add(
-            VendaItem(
-                caixaDaAguaId = caixa.id,
-                descricao = "${caixa.marca} ${caixa.modelo} ${caixa.capacidade}l",
-                quantidade = quantidade,
-                precoUnitario = preco
-            )
+            if (tipo == CAIXA) itemDeCaixa(caixasDisponiveis) { restante(it) }
+            else itemDeOrdem(ordensDisponiveis)
         )
         println("Item adicionado. Itens no pedido: ${itens.size}")
     } while (lerSimNao("Adicionar outro item?"))
 
     return itens
+}
+
+private fun itemDeCaixa(disponiveis: List<CaixaDaAgua>, restante: (CaixaDaAgua) -> Int): VendaItem {
+    val caixa = escolher("Caixa:", disponiveis) {
+        "${it.marca} ${it.modelo} ${it.capacidade}l - R\$ ${it.preco} (estoque ${restante(it)})"
+    }
+
+    val quantidade = lerInt("Quantidade:", min = 1, max = restante(caixa))
+    val preco = lerBigDecimal(
+        "Preço unitário (Enter para ${caixa.preco}):",
+        padrao = caixa.preco
+    )
+
+    return VendaItem(
+        caixaDaAguaId = caixa.id,
+        descricao = "${caixa.marca} ${caixa.modelo} ${caixa.capacidade}l",
+        quantidade = quantidade,
+        precoUnitario = preco
+    )
+}
+
+private fun itemDeOrdem(disponiveis: List<OrdemServico>): VendaItem {
+    val ordem = escolher("Ordem de serviço:", disponiveis) {
+        "Ordem ${it.id} - ${it.tipoServico} - concluída em ${it.dataConclusao?.toLocalDate()} - R\$ ${it.preco}"
+    }
+
+    val preco = lerBigDecimal(
+        "Preço (Enter para ${ordem.preco}):",
+        padrao = ordem.preco
+    )
+
+    return VendaItem(
+        ordemServicoId = ordem.id,
+        descricao = "${ordem.tipoServico} (ordem ${ordem.id})",
+        quantidade = 1,
+        precoUnitario = preco
+    )
 }
 
 private fun mostrarResumo(pedido: Pedido) {

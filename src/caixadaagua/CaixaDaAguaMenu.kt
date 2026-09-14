@@ -4,23 +4,26 @@ import enums.Cor
 import enums.Formato
 import enums.Material
 import utils.lerBigDecimal
-import utils.lerDouble
 import utils.lerEnum
 import utils.lerInt
+import utils.lerOpcao
 import utils.lerTexto
+import java.math.BigDecimal
 import java.sql.SQLException
+
+private val MEDIDA_MINIMA = BigDecimal("0.01")
 
 fun menuCaixa(service: CaixaDaAguaService) {
 
     do {
-        println("0 - VOLTAR AO MENU PRINCIPAL")
+        println("0 - VOLTAR AOS CADASTROS")
         println("1 - CADASTRAR CAIXA DE AGUA")
         println("2 - REMOVER CAIXA DE AGUA")
         println("3 - ALTERAR CAIXA DE AGUA")
         println("4 - LISTAR CAIXA DE AGUA")
         println("5 - REATIVAR CAIXA DE AGUA")
 
-        val op = readln()
+        val op = lerOpcao()
 
         try {
             when (op) {
@@ -49,9 +52,9 @@ private fun cadastrar(service: CaixaDaAguaService) {
         marca = lerTexto("Marca:"),
         modelo = lerTexto("Modelo:"),
         capacidade = lerInt("Capacidade (l):", min = 1),
-        altura = lerDouble("Altura (m):", min = 0.01),
-        largura = lerDouble("Largura (m):", min = 0.01),
-        profundidade = lerDouble("Profundidade (m):", min = 0.01),
+        altura = lerBigDecimal("Altura (m):", MEDIDA_MINIMA),
+        largura = lerBigDecimal("Largura (m):", MEDIDA_MINIMA),
+        profundidade = lerBigDecimal("Profundidade (m):", MEDIDA_MINIMA),
         cor = lerEnum("Cor:", Cor.entries),
         material = lerEnum("Material:", Material.entries),
         formato = lerEnum("Formato:", Formato.entries),
@@ -77,9 +80,9 @@ private fun alterar(service: CaixaDaAguaService) {
         marca = lerTexto("Marca:"),
         modelo = lerTexto("Modelo:"),
         capacidade = lerInt("Capacidade (l):", min = 1),
-        altura = lerDouble("Altura (m):", min = 0.01),
-        largura = lerDouble("Largura (m):", min = 0.01),
-        profundidade = lerDouble("Profundidade (m):", min = 0.01),
+        altura = lerBigDecimal("Altura (m):", MEDIDA_MINIMA),
+        largura = lerBigDecimal("Largura (m):", MEDIDA_MINIMA),
+        profundidade = lerBigDecimal("Profundidade (m):", MEDIDA_MINIMA),
         cor = lerEnum("Cor:", Cor.entries),
         material = lerEnum("Material:", Material.entries),
         formato = lerEnum("Formato:", Formato.entries),

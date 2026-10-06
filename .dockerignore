@@ -1,0 +1,8 @@
+.git
+.idea
+.gradle
+.kotlin
+build
+out
+*.iml
+postgresql-*.jar

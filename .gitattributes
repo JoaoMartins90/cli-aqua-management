@@ -1,0 +1,4 @@
+# o gradlew roda dentro do container Linux: precisa de LF mesmo com checkout no Windows
+gradlew text eol=lf
+*.bat   text eol=crlf
+*.jar   binary
